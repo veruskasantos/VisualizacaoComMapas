@@ -26,8 +26,15 @@ npm install ndjson-cli
 
 npm install d3-dsv
 
-#mesclando arquivos com os dados ao mapa
+#convertendo o arquivo com os dados do censo para ndjson
 ./node_modules/d3-dsv/bin/dsv2json -r ';' -n < Responsavel01_PB.csv > pb-censo.ndjson
+
+
+#transformando o arquivo ndjson
+
+#mesclando arquivos com os dados ao mapa
+
+
 
 responsavel 1, mulheres responsaveis pelo domicilio
 
