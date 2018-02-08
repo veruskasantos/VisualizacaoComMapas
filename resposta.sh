@@ -7,7 +7,7 @@ npm install shapefile
 npm install shapefile
 
 #converte o arquivo .shp em .json
-./node_modules/shapefile/bin/shp2json < shapeParaiba.shp > shapeParaiba.json
+./node_modules/shapefile/bin/shp2json 25SEE250GC_SIR.shp -o shapeParaiba.json
 
 #deixando o shapefile ja projetado, para diminuir custos
 npm install d3-geo-projection
@@ -37,20 +37,20 @@ npm install d3-dsv
 ./node_modules/ndjson-cli/ndjson-join 'd.Cod_setor' saida-ortho-sector.ndjson pb-censo.ndjson > censo-mapa.ndjson
 
 #organizando o arquivo e deixando um objeto por linha
-./node_modules/ndjson-cli/ndjson-map 'd[0].properties = {renda: Number(d[1].V005.replace(",", "."))}, d[0]' < [ndjson-depois-do-join]] > pb-ortho-comdado.ndjson
+./node_modules/ndjson-cli/ndjson-map 'd[0].properties = {responsaveis: Number(d[1].V094.replace(",", "."))}, d[0]' < censo-mapa.ndjson > pb-ortho-comdado.ndjson
 
-npm install -g topojson
+npm install topojson
 
 #compactando o arquivo
-./node_modules/topojson/geo2topo -n tracts=pb-ortho-comdado.ndjson > pb-tracts-topo.json
+./node_modules/topojson/node_modules/topojson-server/bin/geo2topo -n tracts=pb-ortho-comdado.ndjson > pb-tracts-topo.json
 
-#simplificando ainda mais e quantizando a geometri do json
-./node_modules/topojson/toposimplify -p 1 -f < pb-tracts-topo.json | topoquantize 1e5 > pb-quantized-topo.json
+#simplificando ainda mais e quantizando a geometria do json
+./node_modules/topojson/node_modules/topojson-simplify/bin/toposimplify -p 1 -f < pb-tracts-topo.json | ./node_modules/topojson/node_modules/topojson-client/bin/topoquantize 1e5 > pb-quantized-topo.json
 
-npm install -g d3
-npm install -g d3-scale-chromatic
+npm install d3
+npm install d3-scale-chromatic
 
 #gerando <FINALMENTE> o gráfico svg
-topo2geo tracts=- < pb-quantized-topo.json | ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 1e3]), d.features.forEach(f => f.properties.fill = z(f.properties.renda)), d' | ndjson-split 'd.features' | geo2svg -n --stroke none -w 1000 -h 600 > pb-tracts-threshold-light.svg
+./node_modules/topojson/node_modules/topojson-client/bin/topo2geo tracts=- < pb-quantized-topo.json | ./node_modules/ndjson-cli/ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 6]), d.features.forEach(f => f.properties.fill = z(f.properties.responsaveis)), d' | ./node_modules/ndjson-cli/ndjson-split 'd.features' | ./node_modules/d3-geo-projection/bin/geo2svg -n --stroke none -w 1000 -h 600 > pb-tracts-threshold-light.svg
 
 #</end>
