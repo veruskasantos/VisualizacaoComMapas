@@ -37,20 +37,28 @@ npm install d3-dsv
 ./node_modules/ndjson-cli/ndjson-join 'd.Cod_setor' saida-ortho-sector.ndjson pb-censo.ndjson > censo-mapa.ndjson
 
 #organizando o arquivo e deixando um objeto por linha
-./node_modules/ndjson-cli/ndjson-map 'd[0].properties = {responsaveis: Number(d[1].V094.replace(",", "."))}, d[0]' < censo-mapa.ndjson > pb-ortho-comdado.ndjson
+#./node_modules/ndjson-cli/ndjson-map 'd[0].properties = {responsaveis: Number(d[1].V094.replace(",", "."))}, d[0]' < censo-mapa.ndjson > pb-ortho-comdado.ndjson
+./node_modules/ndjson-cli/ndjson-map 'd[0].properties = {responsaveis: Number(d[1].V094.replace(",", ".")) / Number(d[1].V093.replace(",", "."))}, d[0]' < censo-mapa.ndjson > pb-ortho-comdado-escala.ndjson
 
 npm install topojson
 
 #compactando o arquivo
-./node_modules/topojson/node_modules/topojson-server/bin/geo2topo -n tracts=pb-ortho-comdado.ndjson > pb-tracts-topo.json
+#./node_modules/topojson/node_modules/topojson-server/bin/geo2topo -n tracts=pb-ortho-comdado.ndjson > pb-tracts-topo.json
+./node_modules/topojson/node_modules/topojson-server/bin/geo2topo -n tracts=pb-ortho-comdado-escala.ndjson > pb-tracts-topo-escala.json
+
 
 #simplificando ainda mais e quantizando a geometria do json
-./node_modules/topojson/node_modules/topojson-simplify/bin/toposimplify -p 1 -f < pb-tracts-topo.json | ./node_modules/topojson/node_modules/topojson-client/bin/topoquantize 1e5 > pb-quantized-topo.json
+#./node_modules/topojson/node_modules/topojson-simplify/bin/toposimplify -p 1 -f < pb-tracts-topo.json | ./node_modules/topojson/node_modules/topojson-client/bin/topoquantize 1e5 > pb-quantized-topo.json
+./node_modules/topojson/node_modules/topojson-simplify/bin/toposimplify -p 1 -f < pb-tracts-topo-escala.json | ./node_modules/topojson/node_modules/topojson-client/bin/topoquantize 1e5 > pb-quantized-topo-escala.json
+
 
 npm install d3
 npm install d3-scale-chromatic
 
 #gerando <FINALMENTE> o gráfico svg
-./node_modules/topojson/node_modules/topojson-client/bin/topo2geo tracts=- < pb-quantized-topo.json | ./node_modules/ndjson-cli/ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 6]), d.features.forEach(f => f.properties.fill = z(f.properties.responsaveis)), d' | ./node_modules/ndjson-cli/ndjson-split 'd.features' | ./node_modules/d3-geo-projection/bin/geo2svg -n --stroke none -w 1000 -h 600 > pb-tracts-threshold-light.svg
+#./node_modules/topojson/node_modules/topojson-client/bin/topo2geo tracts=- < pb-quantized-topo.json | ./node_modules/ndjson-cli/ndjson-map -r d3 'z = d3.scaleSequential(d3.interpolateViridis).domain([0, 6]), d.features.forEach(f => f.properties.fill = z(f.properties.responsaveis)), d' | ./node_modules/ndjson-cli/ndjson-split 'd.features' | ./node_modules/d3-geo-projection/bin/geo2svg -n --stroke none -w 1000 -h 600 > pb-tracts-threshold-light.svg
+#./node_modules/topojson/node_modules/topojson-client/bin/topo2geo tracts=- < pb-quantized-topo.json | ./node_modules/ndjson-cli/ndjson-map -r d3 -r d3=d3-scale-chromatic 'z = d3.scaleThreshold().domain([0,1,2,3,4,5,6]).range(d3.schemeRdPu[6]), d.features.forEach(f => f.properties.fill = z(f.properties.responsaveis)), d' | ./node_modules/ndjson-cli/ndjson-split 'd.features' | ./node_modules/d3-geo-projection/bin/geo2svg -n --stroke none -w 1000 -h 600 > novaEscalaMapa.svg
+./node_modules/topojson/node_modules/topojson-client/bin/topo2geo tracts=- < pb-quantized-topo-escala.json | ./node_modules/ndjson-cli/ndjson-map -r d3 -r d3=d3-scale-chromatic 'z = d3.scaleThreshold().domain([0, 0.025, 0.05, 0.075, 0.1]).range(d3.schemeRdPu[4]), d.features.forEach(f => f.properties.fill = z(f.properties.responsaveis)), d' | ./node_modules/ndjson-cli/ndjson-split 'd.features' | ./node_modules/d3-geo-projection/bin/geo2svg -n --stroke none -w 1000 -h 600 > novaEscalaMapa2.svg
+
 
 #</end>
